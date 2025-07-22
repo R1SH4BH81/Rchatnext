@@ -8,19 +8,19 @@ export default function AuthButton() {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    console.log("🔁 useEffect ran");
-
     const unsub = onAuthStateChanged(auth, async (u) => {
-      console.log("👀 Firebase auth state changed:", u);
-
       if (!u) return;
       setUser(u);
 
+      const token = await u.getIdToken();
+
       try {
-        console.log("📤 Sending request to backend...");
         const res = await fetch("http://localhost:5000/api/friends/user/upsert", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({
             uid: u.uid,
             name: u.displayName,
@@ -40,9 +40,7 @@ export default function AuthButton() {
 
   const handleLogin = async () => {
     try {
-      console.log("🔐 Opening Google popup...");
       await signInWithPopup(auth, provider);
-      console.log("hii");
     } catch (err) {
       console.error("❌ Sign-in failed:", err);
     }
